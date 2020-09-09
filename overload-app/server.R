@@ -3,6 +3,47 @@
 # --------------- SERVER ---------------------
 
 server <- function(input, output) {
+    
+    
+    # --------------- LOAD ALL FILES -------------------------------------
+    workouts <- list.files(paste0('../profiles/', tolower(last_name)), full.names=TRUE)
+    
+    
+    ## --------------- NUMBER SESSIONS ---------------------------------------
+    output$number_of_workouts <- renderValueBox({valueBox(length(workouts),
+                                                          subtitle='Sessions to Date',
+                                                          icon = icon('check'),
+                                                          color = 'green'
+                                                          )})
+    
+    workout_info <- lapply(workouts, readr::read_csv)
+    
+    this_workout <- workout_info[[1]] # ---- MOST RECENT WORKOUT HERE -----
+    
+    
+    
+    
+    ## --------------- SESSIONS PER WEEK ---------------------------------------
+    workout_dates <- lapply(workout_info,
+                            function(k) {
+                                k %>% filter(exercise=='session start') %>% pull(date)
+                            })
+    
+    per_week <- table(unlist(lapply(workout_dates, function(k) cut(k, 'week'))))
+    output$per_week <- renderValueBox(valueBox(mean(per_week),
+                                               'Average Sessions Per Week',
+                                               icon = icon('check'),
+                                               color = 'green'))
+    
+    
+    
+    
+    ## PREVIOUS WORKOUT
+    output$previous_exercises <- renderTable({this_workout %>% filter(exercise != 'session start') %>% select(exercise) %>% unique()})
+    
+    
+    # ---------------------------- MENU ITEMS ------------------------------
+    
     output$menu <- renderMenu({
         
         sidebarMenu(
@@ -22,40 +63,7 @@ server <- function(input, output) {
     })
     
     
-    ## COPIED FROM https://community.rstudio.com/t/shiny-directory-input/29160/2
     
-    shinyDirChoose(
-        input,
-        'dir',
-        roots = c(home = '~'),
-        filetypes = c('', 'txt', 'bigWig', "tsv", "csv", "bw")
-    )
-    
-    global <- reactiveValues(datapath = paste0(getwd(), '/profiles/', tolower(last_name)))
-    
-    dir <- reactive(input$dir)
-    
-    output$dir <- renderText({
-        global$datapath
-    })
-    
-    observeEvent(ignoreNULL = TRUE,
-                 eventExpr = {
-                     input$dir
-                 },
-                 handlerExpr = {
-                     if (!"path" %in% names(dir())) return()
-                     home <- normalizePath("~")
-                     global$datapath <-
-                         file.path(home, paste(unlist(dir()$path[-1]), collapse = .Platform$file.sep))
-                 })
-    
-    ##
-    
-    
-    output$wd <- renderText({
-        paste('<B>Workout Directory: </B>')
-    })
     
     
     
@@ -159,8 +167,52 @@ server <- function(input, output) {
         }
     )
     
-        
-    }
+    
+    
+    
+    
+    
+    # PLOTS
+    
+    output$recentsets <- renderPlot(this_workout %>%
+                                        filter(exercise != 'session start') %>%
+                                        ggplot(aes(x=exercise)) +
+                                        geom_bar() +
+                                        ylab('sets') +
+                                        xlab('exercise') +
+                                        ggtitle('Number of Sets Per Exercise') +
+                                        theme_classic() +
+                                        theme(axis.text.x = element_text(angle = 90)))
+    
+    output$recentreps <- renderPlot(this_workout %>%
+                                       filter(exercise != 'session start') %>%
+                                       group_by(exercise) %>%
+                                       summarize(mean_rep=mean(repetitions)) %>%
+                                       ggplot(aes(x=exercise, y=mean_rep)) +
+                                       geom_bar(stat='identity') +
+                                       ylab('sets') +
+                                       xlab('exercise') +
+                                       ggtitle('Average Reps Per Exercise') +
+                                       theme_classic() +
+                                       theme(axis.text.x = element_text(angle = 90)))
+    
+    output$recentweights <- renderPlot(this_workout %>%
+                                           filter(exercise != 'session start') %>%
+                                           ggplot(aes(x=exercise, y=weight)) +
+                                           geom_count() +
+                                           theme_classic() +
+                                           theme(axis.text.x = element_text(angle = 90)) +
+                                           labs(size='sets') +
+                                           ggtitle('Total Weight per Exercise')
+    )
+    
+    
+    output$recentchart <- renderTable(this_workout %>%
+                                          filter(exercise != 'session start') %>%
+                                          group_by(exercise, equipment) %>%
+                                          summarize(`max total weight (lbs)`=max(weight)))
+    
+}
 
 
 

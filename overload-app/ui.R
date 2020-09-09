@@ -3,25 +3,12 @@ library(shinydashboard)
 library(shinyFiles)
 
 
-# ---------- STATIC ---------------
-app_name <- 'Progressive Overload'
-full_name <- 'Edie Espejo'
-number_of_workouts <- 10
-average_sessions <- 3
-all_exercises <- c('bicep curl', 'deadlift', 'deadlift, Romanian', 'deadlift, sumo',
-                   'deadlift, single leg', 'hammer curl',
-                   'kettlebell swings',
-                   'shoulder press', 'rows, bent over', 
-                   'squat', 'squat, narrow', 'squat, sumo')
-
-all_equipment <- c('barbell', 'dumbbell, pair', 'dumbbell, single', 'EZ curl bar', 
-                   'kettlebell', 'olympic bar', 'resistance band')
-
-welcome <- paste0('Welcome back, ', full_name, '!')
 
 
 
-last_name <- strsplit(full_name, ' ')[[1]][2]
+
+
+
 
 
 
@@ -39,33 +26,22 @@ body <- dashboardBody(
                     status = 'warning',
                     'Continue your program.'),
                 
-                valueBox(number_of_workouts,
-                         width=3,
-                         'Sessions to Date',
-                         icon = icon('check'),
-                         color = 'green'),
+                valueBoxOutput('number_of_workouts',
+                         width=3),
                 
-                valueBox(average_sessions,
-                         width=3,
-                         'Average Sessions Per Week',
-                         icon = icon('check'),
-                         color = 'green'),
+                valueBoxOutput('per_week',
+                         width=3),
+                         
                 
             ),
             
             fluidRow(
-                box(title = 'Locate Workout Files',
-                    width=4,
-                    
-                    shinyDirButton("dir", "Input directory", "Upload"),
-                    br(),
-                    br(),
-                    htmlOutput("wd"),
-                    textOutput('dir')),
                 
                 box(title = 'Previous Session',
                     width=6,
-                    'You did the following exercises during your last session.')
+                    'You did the following exercises during your last session.',
+                    
+                    tableOutput('previous_exercises'))
                 
                 
             )
@@ -158,9 +134,37 @@ body <- dashboardBody(
         
         # --------- ACHIEVEMENTS ------------
         tabItem(tabName = 'achievements',
-                box(title = 'Achievements',
+                
+                fluidRow(
+                    box(title = 'Achievements',
                     status = 'warning',
-                    width=12))
+                    width=12)),
+                
+                fluidRow(box(title='Most Recent Session',
+                             width=12,
+                             tableOutput('recentchart')), 
+                    
+                    ),
+                
+                fluidRow(
+                    
+                    tabBox(
+                        title = "Sets and Reps",
+                        # The id lets us use input$tabset1 on the server to find the current tab
+                        id = "tabset1", height = "250px",
+                        tabPanel("Recent Sets", plotOutput('recentsets')),
+                        tabPanel("Recent Reps", plotOutput('recentreps'))
+                    ),
+                    
+                    
+                    box(title='Recent Weights',
+                        width=6,
+                        plotOutput('recentweights')),
+                    
+                    
+                    )
+                
+                )
     )
 )
 
