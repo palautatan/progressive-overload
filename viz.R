@@ -76,4 +76,12 @@ per_week <- table(unlist(lapply(workout_dates, function(k) cut(k, 'week'))))
 
 
 
+total_time <- workout_info[[1]] %>%
+  summarize(start=tail(time, 1),
+            end=head(time, 1)) %>%
+  summarize(mins=difftime(end, start, units='mins')) %>%
+  summarize(m=as.numeric(round(mins)),
+            s=as.numeric(mins-round(mins))*60) %>%
+  paste0(collapse=':')
+
 

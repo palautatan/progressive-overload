@@ -1,3 +1,9 @@
+library(shiny)
+library(shinydashboard)
+library(shinyFiles)
+library(dplyr)
+library(ggplot2)
+
 # ---------- STATIC ---------------
 app_name <- 'Progressive Overload'
 full_name <- 'Edie Espejo'

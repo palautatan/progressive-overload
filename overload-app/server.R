@@ -55,9 +55,9 @@ server <- function(input, output) {
                      tabName = 'log',
                      icon = icon('dumbbell')),
             
-            menuItem('Achievements',
-                     tabName = 'achievements',
-                     icon = icon('medal'))
+            menuItem('Statistics',
+                     tabName = 'statistics',
+                     icon = icon('chart-bar'))
         )
         
     })
@@ -174,6 +174,47 @@ server <- function(input, output) {
     
     # PLOTS
     
+    
+    
+    # -------------- EXERCISE LIST ------------------------------------
+    ex_list <- this_workout %>% filter(exercise != 'session start') %>%
+        select(exercise) %>%
+        unique() %>%
+        pull() %>%
+        rev()
+    
+    output$num_exercises <- renderValueBox({valueBox(length(ex_list),
+                                                     subtitle='Total Exercises',
+                                                     icon = icon('dumbbell'),
+                                                     color = 'yellow')})
+    
+    
+    ex_list <- c(ex_list[-length(ex_list)], paste0('and ', ex_list[length(ex_list)]))
+    
+    output$ex_list <- renderText(paste0('In your most recent session, you completed the following exercises: ', 
+                                        ex_list %>% paste0(collapse='; '), '.'))
+    
+    
+    
+    
+    
+    total_time <- this_workout %>%
+        summarize(start=tail(time, 1),
+                  end=head(time, 1)) %>%
+        summarize(mins=difftime(end, start, units='mins')) %>%
+        summarize(m=as.numeric(round(mins)),
+                  s=as.numeric(mins-round(mins))*60) %>%
+        paste0(collapse=':')
+    
+    
+    
+    output$total_time <- renderValueBox({valueBox(total_time,
+                                                  subtitle='Duration',
+                                                  icon = icon('clock'),
+                                                  color = 'purple'
+    )})
+    
+    
     output$recentsets <- renderPlot(this_workout %>%
                                         filter(exercise != 'session start') %>%
                                         ggplot(aes(x=exercise)) +
@@ -190,7 +231,7 @@ server <- function(input, output) {
                                        summarize(mean_rep=mean(repetitions)) %>%
                                        ggplot(aes(x=exercise, y=mean_rep)) +
                                        geom_bar(stat='identity') +
-                                       ylab('sets') +
+                                       ylab('reps') +
                                        xlab('exercise') +
                                        ggtitle('Average Reps Per Exercise') +
                                        theme_classic() +

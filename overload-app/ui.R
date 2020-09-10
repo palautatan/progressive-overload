@@ -1,15 +1,3 @@
-library(shiny)
-library(shinydashboard)
-library(shinyFiles)
-
-
-
-
-
-
-
-
-
 
 
 # ---------- BODY -----------------
@@ -132,41 +120,64 @@ body <- dashboardBody(
                 
             )),
         
-        # --------- ACHIEVEMENTS ------------
-        tabItem(tabName = 'achievements',
+        # --------- STATS ------------
+        tabItem(tabName = 'statistics',
+                
                 
                 fluidRow(
-                    box(title = 'Achievements',
-                    status = 'warning',
-                    width=12)),
-                
-                fluidRow(box(title='Most Recent Session',
-                             width=12,
-                             tableOutput('recentchart')), 
+                    tabBox(title='Statistics',
+                           id='recent_alltime_tab',
+                           width=12,
+                           
+                           tabPanel(title='Most Recent',
+                                    
+                                    fluidRow(
+                                    box(status='warning',
+                                        'Your last session was on [insert date here].',
+                                        
+                                        br(),
+                                        br(),
+                                        
+                                        textOutput('ex_list'),
+                                        width=6),
+                                    
+                                    valueBoxOutput('total_time',
+                                                   width=3),
+                                    
+                                    valueBoxOutput('num_exercises',
+                                                   width=3)
+                                    ),
+                                    
+                                    br(),
+                                    br(),
+                                    
+                                    fluidRow(
+                                        
+                                        tabBox(
+                                            title = "Sets and Reps",
+                                            tabPanel("Sets", plotOutput('recentsets')),
+                                            tabPanel("Reps", plotOutput('recentreps'))
+                                        ),
+                                        
+                                        
+                                        tabBox(title='Weight',
+                                            width=6,
+                                            
+                                            tabPanel('Weights', plotOutput('recentweights')),
+                                            
+                                            tabPanel('Max Weights', tableOutput('recentchart'))
+                                        
+                                        )
+                                    )),
                     
-                    ),
-                
-                fluidRow(
-                    
-                    tabBox(
-                        title = "Sets and Reps",
-                        # The id lets us use input$tabset1 on the server to find the current tab
-                        id = "tabset1", height = "250px",
-                        tabPanel("Recent Sets", plotOutput('recentsets')),
-                        tabPanel("Recent Reps", plotOutput('recentreps'))
-                    ),
-                    
-                    
-                    box(title='Recent Weights',
-                        width=6,
-                        plotOutput('recentweights')),
-                    
-                    
-                    )
-                
+                            tabPanel(title = 'All Time',
+                                     'Under Construction.'
+                                     )
                 )
-    )
-)
+        ))))
+                    
+                    
+                
 
 
 # --------------- USER INTERFACE ---------------------
