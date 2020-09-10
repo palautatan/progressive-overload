@@ -129,13 +129,14 @@ body <- dashboardBody(
                            id='recent_alltime_tab',
                            width=12,
                            
+                           # --------------------- RECENT -----------------------
                            tabPanel(title='Most Recent',
                                     
                                     fluidRow(
-                                    box(status='warning',
-                                        'Your last session was on [insert date here].',
+                                    box(title='Your Last Session',
+                                        status='warning',
+                                        textOutput('ex_date'),
                                         
-                                        br(),
                                         br(),
                                         
                                         textOutput('ex_list'),
@@ -169,12 +170,40 @@ body <- dashboardBody(
                                         
                                         )
                                     )),
-                    
+                           
+                            # ----------------- ALL TIME ---------------------------
                             tabPanel(title = 'All Time',
-                                     'Under Construction.'
+                                     fluidRow(
+                                         box(title='All Sessions',
+                                             status='warning',
+                                             width=12,
+                                             'This tab displays information on your lifting progress over all sessions recorded through Progressive Overload.')
+                                     ),
+                                     
+                                     fluidRow(
+                                            
+                                         box(title='Heaviest Lifts',
+                                             width=12,
+
+                                             uiOutput('prboxes')
+                                     )
+                                     ),
+
+                                     fluidRow(
+                                         box(title='Time Series',
+                                             width=4,
+                                             status='warning',
+
+                                             uiOutput('completed_exercises')
+                                     ),
+                                     
+                                     box(width=8,
+                                         plotOutput('time_series_plot'))
+                                     
+
                                      )
                 )
-        ))))
+        )))))
                     
                     
                 

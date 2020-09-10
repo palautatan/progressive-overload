@@ -9,16 +9,17 @@ server <- function(input, output) {
     workouts <- list.files(paste0('../profiles/', tolower(last_name)), full.names=TRUE)
     
     
+    
     ## --------------- NUMBER SESSIONS ---------------------------------------
     output$number_of_workouts <- renderValueBox({valueBox(length(workouts),
                                                           subtitle='Sessions to Date',
                                                           icon = icon('check'),
-                                                          color = 'green'
+                                                          color = 'purple'
                                                           )})
     
     workout_info <- lapply(workouts, readr::read_csv)
     
-    this_workout <- workout_info[[1]] # ---- MOST RECENT WORKOUT HERE -----
+    this_workout <- workout_info[[length(workout_info)]] # ---- MOST RECENT WORKOUT HERE -----
     
     
     
@@ -33,7 +34,7 @@ server <- function(input, output) {
     output$per_week <- renderValueBox(valueBox(mean(per_week),
                                                'Average Sessions Per Week',
                                                icon = icon('check'),
-                                               color = 'green'))
+                                               color = 'yellow'))
     
     
     
@@ -172,11 +173,22 @@ server <- function(input, output) {
     
     
     
-    # PLOTS
     
     
     
+    # -------------- RECENT WORKOUT -----------------------------------
     # -------------- EXERCISE LIST ------------------------------------
+    
+    ex_date <- this_workout %>%
+        filter(exercise == 'session start') %>%
+        pull(date) %>%
+        as.character()
+    
+    dow <- weekdays(as.Date(ex_date))
+    
+    output$ex_date <- renderText({paste0('Your last session was on ', dow, ', ', ex_date, '.')})
+
+    
     ex_list <- this_workout %>% filter(exercise != 'session start') %>%
         select(exercise) %>%
         unique() %>%
@@ -203,8 +215,14 @@ server <- function(input, output) {
                   end=head(time, 1)) %>%
         summarize(mins=difftime(end, start, units='mins')) %>%
         summarize(m=as.numeric(round(mins)),
-                  s=as.numeric(mins-round(mins))*60) %>%
-        paste0(collapse=':')
+                  s=as.numeric(round(abs(mins-round(mins)))*60))
+    
+    if (nchar(total_time$s)==1) {
+        total_time$s <- paste0(total_time$s, 0)
+    }
+    
+    total_time <- total_time %>% paste0(collapse=':')
+    
     
     
     
@@ -215,36 +233,46 @@ server <- function(input, output) {
     )})
     
     
+    # --------------------------------- RECENT -------------------------------------
+    # ---------------------------------- PLOTS -------------------------------------
+    
     output$recentsets <- renderPlot(this_workout %>%
                                         filter(exercise != 'session start') %>%
                                         ggplot(aes(x=exercise)) +
-                                        geom_bar() +
+                                        geom_bar(aes(fill=..count..)) +
                                         ylab('sets') +
                                         xlab('exercise') +
                                         ggtitle('Number of Sets Per Exercise') +
                                         theme_classic() +
-                                        theme(axis.text.x = element_text(angle = 90)))
+                                        theme(axis.text.x = element_text(angle = 90)) +
+                                        scale_fill_gradientn(colours=c('goldenrod', '#EDCB62', '#483D8B', '#473C8B'), guide = FALSE))
     
     output$recentreps <- renderPlot(this_workout %>%
                                        filter(exercise != 'session start') %>%
                                        group_by(exercise) %>%
                                        summarize(mean_rep=mean(repetitions)) %>%
                                        ggplot(aes(x=exercise, y=mean_rep)) +
-                                       geom_bar(stat='identity') +
+                                       geom_bar(aes(fill=robustHD::standardize(mean_rep)), stat='identity') +
                                        ylab('reps') +
                                        xlab('exercise') +
                                        ggtitle('Average Reps Per Exercise') +
                                        theme_classic() +
-                                       theme(axis.text.x = element_text(angle = 90)))
+                                       theme(axis.text.x = element_text(angle = 90)) +
+                                       scale_fill_gradientn(colours=c('goldenrod', '#EDCB62', '#483D8B', '#473C8B'), guide = FALSE)
+                                    
+                                    )
     
     output$recentweights <- renderPlot(this_workout %>%
                                            filter(exercise != 'session start') %>%
                                            ggplot(aes(x=exercise, y=weight)) +
-                                           geom_count() +
+                                           geom_count(aes(col=weight)) +
                                            theme_classic() +
                                            theme(axis.text.x = element_text(angle = 90)) +
                                            labs(size='sets') +
-                                           ggtitle('Total Weight per Exercise')
+                                           ggtitle('Total Weight per Exercise') +
+                                           expand_limits(y = 0)  +
+                                           guides(size = guide_legend(override.aes = list(color='#363636'))) +
+                                           scale_colour_gradientn(colours=c('orange', '#EDCB62', '#483D8B', '#473C8B'), guide = FALSE)
     )
     
     
@@ -252,6 +280,80 @@ server <- function(input, output) {
                                           filter(exercise != 'session start') %>%
                                           group_by(exercise, equipment) %>%
                                           summarize(`max total weight (lbs)`=max(weight)))
+    
+    
+    
+    # ---------------------- CREATE BOXES --------------------------------
+    # https://stackoverflow.com/questions/52162024/create-value-box-in-renderui-by-looping
+    
+    
+    all_history <- do.call(rbind, workout_info)
+    
+    output$prboxes <- renderUI({
+        
+        prs <- all_history %>%
+            arrange(-as.numeric(date), exercise) %>%
+            filter(exercise != 'session start') %>%
+            group_by(exercise) %>%
+            slice(which.max(weight)) %>%
+            select(date, exercise, equipment, weight, repetitions) %>%
+            arrange(-weight)
+        
+        
+        lapply(1:nrow(prs), function(i) { 
+            
+            
+            valueBox(subtitle=HTML(paste0(prs$exercise[i],
+                                          br(),
+                                          paste0(prs$repetitions[i], ' reps'),
+                                          br(),
+                                          prs$equipment[i],
+                                          br(),
+                                          prs$date[i])),
+                     value=prs$weight[i],     #here display number1 one by one like name 
+                     color = 'purple',
+                     width = 3
+            )
+        } )
+        
+    })
+    
+    
+    completed_exercises <- all_history %>%
+        filter(exercise != 'session start') %>%
+        select(exercise) %>%
+        unique()
+
+    output$completed_exercises = renderUI({
+        selectInput('completed_exercise', 'Exercises', completed_exercises)
+    })
+    
+    
+    output$time_series_plot <- renderPlot({
+        
+        a1 <- all_history %>%
+            filter(exercise == input$completed_exercise) %>%
+            group_by(date, exercise, weight) %>%
+            summarize(`average reps`=mean(repetitions))
+        
+        a2 <- a1 %>%
+            group_by(date, exercise) %>%
+            summarize(minw=min(weight),
+                      maxw=max(weight)) 
+        
+        merge(a1, a2) %>%
+            ggplot(aes(x=date, y=weight)) +
+            geom_segment(aes(x = date, xend = date, y = minw, yend = maxw)) +
+            geom_point(aes(col=`average reps`, size=`average reps`)) +
+            facet_wrap(~ exercise) +
+            expand_limits(y = 0)  +
+            guides(size = guide_legend(override.aes = list(color='#363636'))) +
+            scale_colour_gradientn(colours=c('orange', '#EDCB62', '#483D8B', '#473C8B')) +
+            guides(size=FALSE) +
+            theme_classic()
+        
+    })
+
     
 }
 

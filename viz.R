@@ -59,11 +59,14 @@ this_workout %>%
 this_workout %>%
   filter(exercise != 'session start') %>%
   ggplot(aes(x=exercise, y=weight)) +
-    geom_count() +
+    geom_count(aes(col=weight)) +
     theme_classic() +
     theme(axis.text.x = element_text(angle = 90)) +
     labs(size='sets') +
-    ggtitle('Total Weight per Exercise')
+    ggtitle('Total Weight per Exercise')  +
+    expand_limits(y = 0) +
+    guides(size = guide_legend(override.aes = list(color='#363636'))) +
+    scale_colour_gradientn(colours=c('goldenrod', '#DB70DB', '#9F5F9F'), guide = FALSE)
 
 
 workout_dates <- lapply(workout_info,
@@ -84,4 +87,28 @@ total_time <- workout_info[[1]] %>%
             s=as.numeric(mins-round(mins))*60) %>%
   paste0(collapse=':')
 
+
+
+a1 <- all_history %>%
+  filter(exercise != 'session start') %>%
+  group_by(date, exercise, weight) %>%
+  summarize(`average reps`=mean(repetitions))
+
+a2 <- a1 %>%
+  group_by(date, exercise) %>%
+  summarize(minw=min(weight),
+            maxw=max(weight)) 
+
+
+
+
+merge(a1, a2) %>%
+  ggplot(aes(x=date, y=weight)) +
+  geom_segment(aes(x = date, xend = date, y = minw, yend = maxw)) +
+  geom_point(aes(col=`average reps`)) +
+  facet_wrap(~ exercise) +
+  expand_limits(y = 0)  +
+  guides(size = guide_legend(override.aes = list(color='#363636'))) +
+  scale_colour_gradientn(colours=c('orange', '#EDCB62', '#483D8B', '#473C8B')) +
+  theme_classic()
 
