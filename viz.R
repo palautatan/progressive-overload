@@ -1,5 +1,6 @@
 library(ggplot2)
 library(dplyr)
+library(ggcal)
 
 
 # workouts <- list.files(paste0('profiles/', last_name), full.names=TRUE)
@@ -13,6 +14,53 @@ workout_info <- lapply(workouts, readr::read_csv)
 # FOR EACH WORKOUT
 this_workout <- workout_info[[1]]
 
+
+# ---------- CALENDAR ---------------
+
+dates <- lapply(workout_info, function(k) {
+    k %>%
+    filter(exercise == 'session start') %>%
+    pull(date)
+  })
+
+cal_days <- lubridate::days_in_month(as.Date(dates[[1]], '%Y-%m-%d'))
+
+month_only <- strsplit(dates[[1]], '-')[[1]]
+
+first_of_month <- month_only
+first_of_month[3] <- '01'
+first_of_month <- paste0(first_of_month, collapse='-')
+
+last_of_month <- month_only
+last_of_month[3] <- cal_days
+last_of_month <- paste0(last_of_month, collapse='-')
+
+
+for_the_month <- seq(as.Date(first_of_month), as.Date(last_of_month), by='1 day')
+for_the_month <- data.frame(dates=for_the_month)
+
+
+time_trained <- sapply(workout_info, get_time)
+
+try1 <- for_the_month %>% mutate(dates=as.numeric(dates))
+try2 <- data.frame(cbind(dates=unlist(dates), time_trained))
+
+try3 <- left_join(try1, try2)
+
+try4 <- cbind(date=for_the_month, time=try3$time_trained)
+
+
+ggcal::ggcal(dates=try4$date, fills=try4$time) +
+  geom_tile(color = 'black') +
+  scale_fill_gradientn(name='session time', colours=c('goldenrod', '#EDCB62', '#483D8B', '#473C8B')) +
+  theme(legend.title=element_text(size=8))
+
+
+
+
+
+
+# ---------- PLOTS ---------------
 
 # ggplot(aes(x=reorder(exercise, exercise, function(x) -length(x)))) +
 

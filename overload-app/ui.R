@@ -29,7 +29,11 @@ body <- dashboardBody(
                     width=6,
                     'You did the following exercises during your last session.',
                     
-                    tableOutput('previous_exercises'))
+                    tableOutput('previous_exercises')),
+                
+                box(title = 'Calendar',
+                    width=6,
+                    plotOutput('workout_calendar'))
                 
                 
             )
@@ -61,46 +65,57 @@ body <- dashboardBody(
             fluidRow(
                 # EXERCISE
                 box(title='Exercise',
-                    width=3,
+                    width=4,
                     selectInput(inputId = 'exercise',
                                 label = 'Exercise',
-                                all_exercises)
+                                all_exercises),
+                    
+                    selectInput(inputId = 'equipment',
+                                label = 'Equipment',
+                                all_equipment),
+                    
+                    numericInput(inputId = 'reps',
+                                 label = 'Repetitions',
+                                 min = 1,
+                                 max = 100,
+                                 value = 12,
+                                 step=1),
+                    
+                    
+                    numericInput(inputId = 'weight',
+                                 label = 'Total Weight (lbs)',
+                                 min = 1,
+                                 max = 500,
+                                 value = 20,
+                                 step=1),
+                    
                 ),
                 
                 # EXERCISE
-                box(title='Equipment',
-                    width=3,
-                    selectInput(inputId = 'equipment',
-                                label = 'Equipment',
-                                all_equipment)
+                box(title='Specifications',
+                    width=4,
+                    
+                    
+                    radioButtons('handedness', label='Handedness', 
+                                       choices = list('left', 'right', 'both'),
+                                       selected = 'both'),
+                    
+                    checkboxGroupInput('grip', label='Grips', 
+                                       choices = list('wide'='wide', 'narrow'='narrow', 'overhand'='overhand', 'underhand'='underhand', 'alternate'='alternate'),
+                                       selected = 0)
                 ),
                 
-                # WEIGHT
-                box(title = 'Weight',
-                    width = 2,
-                    numericInput(inputId = 'weight',
-                                label = 'Total Weight (lbs)',
-                                min = 1,
-                                max = 500,
-                                value = 20,
-                                step=1)
-                ),
-                
-                # REPS
-                box(title = 'Reps',
-                    width = 2,
-                    numericInput(inputId = 'reps',
-                                label = 'Repetitions',
-                                min = 1,
-                                max = 100,
-                                value = 12,
-                                step=1)
-                ),
-                
+            
                 
                 # NOTES
-                box(title = 'Notes',
-                    width=2,
+                box(title = 'Quality and Notes',
+                    width=4,
+                    
+                    
+                    checkboxGroupInput('repquality', label='Quality', 
+                                       choices = list('warm up'='warm up', 'amrap'='amrap', 'cheating'='cheating', 'fast'='fast', 'slow'='slow'),
+                                       selected = 1),
+                    
                     textInput(inputId = 'notes',
                               label = 'Notes'),
                     

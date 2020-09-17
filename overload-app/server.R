@@ -39,8 +39,49 @@ server <- function(input, output) {
     
     
     
-    ## PREVIOUS WORKOUT
+    # ---------------------------- PREVIOUS WORKOUT ---------------------------
     output$previous_exercises <- renderTable({this_workout %>% filter(exercise != 'session start') %>% select(exercise) %>% unique()})
+    
+    
+    
+    # ------------------------- WORKOUT CALENDAR ------------------------------
+    
+    dates <- lapply(workout_info, function(k) {
+        k %>%
+            filter(exercise == 'session start') %>%
+            pull(date)
+    })
+    
+    cal_days <- lubridate::days_in_month(dates[[1]])
+    
+    month_only <- strsplit(as.character(dates[[1]]), '-')[[1]]
+    
+    first_of_month <- month_only
+    first_of_month[3] <- '01'
+    first_of_month <- paste0(first_of_month, collapse='-')
+    
+    last_of_month <- month_only
+    last_of_month[3] <- cal_days
+    last_of_month <- paste0(last_of_month, collapse='-')
+    
+    
+    for_the_month <- seq(as.Date(first_of_month), as.Date(last_of_month), by='1 day')
+    for_the_month <- data.frame(dates=for_the_month)
+    
+    time_trained <- sapply(workout_info, get_time)
+    
+    a1 <- for_the_month %>% mutate(dates=as.numeric(dates))
+    a2 <- data.frame(cbind(dates=unlist(dates), time_trained))
+    a3 <- left_join(a1, a2)
+    a4 <- cbind(date=for_the_month, time=a3$time_trained)
+    
+
+    output$workout_calendar <- renderPlot({
+        ggcal::ggcal(dates=a4$date, fills=a4$time) +
+            geom_tile(color = 'black') +
+            scale_fill_gradientn(name='session time', colours=c('goldenrod', '#EDCB62', '#483D8B', '#473C8B')) +
+            theme(legend.title=element_text(size=8))
+    })
     
     
     # ---------------------------- MENU ITEMS ------------------------------
@@ -74,6 +115,9 @@ server <- function(input, output) {
                exercise = NULL,
                weight = NULL,
                repetitions = NULL,
+               hand = NULL,
+               grip = NULL,
+               quality = NULL,
                notes = NULL)
     values <- reactiveValues(df_data = df_data)
     
@@ -93,6 +137,9 @@ server <- function(input, output) {
                                  equipment = NA,
                                  weight = NA,
                                  repetitions = NA,
+                                 hand = NA,
+                                 grip = NA,
+                                 quality = NA,
                                  notes = NA)
         
         
@@ -111,8 +158,12 @@ server <- function(input, output) {
         df_data <- data.frame(date = NULL,
                               time = NULL,
                               exercise = NULL,
+                              equipment = NULL,
                               weight = NULL,
                               repetitions = NULL,
+                              hand = NULL,
+                              grip = NULL,
+                              quality = NULL,
                               notes = NULL)
         
         values$df_data <- df_data
@@ -127,12 +178,16 @@ server <- function(input, output) {
         now_date <- as.character(anytime::anydate(lubridate::now()))
         now_time <- as.character(strftime(lubridate::now(), format='%H:%M:%S'))
         
+        
         input_vals <- data.frame(date = now_date,
                                  time = now_time,
                                  exercise = input$exercise,
                                  equipment = input$equipment,
                                  weight = input$weight,
                                  repetitions = input$reps,
+                                 hand = input$handedness,
+                                 grip = paste0(unlist(input$grip), collapse=', '),
+                                 quality = paste0(unlist(input$repquality), collapse=', '),
                                  notes = input$notes)
         
 
@@ -151,7 +206,7 @@ server <- function(input, output) {
     
     
     # DF DATA OBJECT
-    output$df_data_out <- renderTable(values$df_data)
+    output$df_data_out <- renderTable(values$df_data[,-1])
     
     
     
