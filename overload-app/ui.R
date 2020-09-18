@@ -102,7 +102,11 @@ body <- dashboardBody(
                     
                     checkboxGroupInput('grip', label='Grips', 
                                        choices = list('wide'='wide', 'narrow'='narrow', 'overhand'='overhand', 'underhand'='underhand', 'alternate'='alternate'),
-                                       selected = 0)
+                                       selected = 0),
+                    
+                    checkboxGroupInput('support', label='Support', 
+                                       choices = list('belt', 'sleeve', 'spotter'),
+                                       selected = 0),
                 ),
                 
             
@@ -113,7 +117,7 @@ body <- dashboardBody(
                     
                     
                     checkboxGroupInput('repquality', label='Quality', 
-                                       choices = list('warm up'='warm up', 'amrap'='amrap', 'cheating'='cheating', 'fast'='fast', 'slow'='slow'),
+                                       choices = list('warm up', 'amrap / until failure', 'cheating', 'fast', 'slow', 'full range of motion', 'limited range of motion'),
                                        selected = 1),
                     
                     textInput(inputId = 'notes',

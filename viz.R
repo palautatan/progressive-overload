@@ -14,6 +14,16 @@ workout_info <- lapply(workouts, readr::read_csv)
 # FOR EACH WORKOUT
 this_workout <- workout_info[[1]]
 
+all_history <- do.call(merge, workout_info)
+
+# dplyr::left_join(workout_info[[1]], workout_info[[2]])
+# 
+# 
+# library(plyr)
+# mytest <- plyr::join_all(workout_info, type='left')
+# dim(mytest)
+# ncol(mytest)
+
 
 # ---------- CALENDAR ---------------
 

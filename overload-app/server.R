@@ -118,6 +118,7 @@ server <- function(input, output) {
                hand = NULL,
                grip = NULL,
                quality = NULL,
+               support = NULL,
                notes = NULL)
     values <- reactiveValues(df_data = df_data)
     
@@ -140,6 +141,7 @@ server <- function(input, output) {
                                  hand = NA,
                                  grip = NA,
                                  quality = NA,
+                                 support = NA,
                                  notes = NA)
         
         
@@ -164,6 +166,7 @@ server <- function(input, output) {
                               hand = NULL,
                               grip = NULL,
                               quality = NULL,
+                              support = NULL,
                               notes = NULL)
         
         values$df_data <- df_data
@@ -188,6 +191,7 @@ server <- function(input, output) {
                                  hand = input$handedness,
                                  grip = paste0(unlist(input$grip), collapse=', '),
                                  quality = paste0(unlist(input$repquality), collapse=', '),
+                                 support = paste0(unlist(input$support), collapse=', '),
                                  notes = input$notes)
         
 
@@ -342,7 +346,7 @@ server <- function(input, output) {
     # https://stackoverflow.com/questions/52162024/create-value-box-in-renderui-by-looping
     
     
-    all_history <- do.call(rbind, workout_info)
+    all_history <- plyr::join_all(workout_info, type='full')
     
     output$prboxes <- renderUI({
         
@@ -377,6 +381,7 @@ server <- function(input, output) {
     completed_exercises <- all_history %>%
         filter(exercise != 'session start') %>%
         select(exercise) %>%
+        arrange(exercise) %>%
         unique()
 
     output$completed_exercises = renderUI({
