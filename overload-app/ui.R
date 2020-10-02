@@ -96,8 +96,8 @@ body <- dashboardBody(
                     width=4,
                     
                     
-                    radioButtons('handedness', label='Handedness', 
-                                       choices = list('left', 'right', 'both'),
+                    radioButtons('handedness', label='Side', 
+                                       choices = list('left', 'right', 'both/neutral'),
                                        selected = 'both'),
                     
                     checkboxGroupInput('grip', label='Grips', 

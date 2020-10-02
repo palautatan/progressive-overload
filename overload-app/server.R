@@ -1,4 +1,4 @@
-
+source('global.R', local=TRUE)
 
 # --------------- SERVER ---------------------
 
@@ -6,7 +6,7 @@ server <- function(input, output) {
     
     
     # --------------- LOAD ALL FILES -------------------------------------
-    workouts <- list.files(paste0('../profiles/', tolower(last_name)), full.names=TRUE)
+    workouts <- list.files(paste0('profiles/', tolower(last_name)), full.names=TRUE)
     
     
     
@@ -31,7 +31,7 @@ server <- function(input, output) {
                             })
     
     per_week <- table(unlist(lapply(workout_dates, function(k) cut(k, 'week'))))
-    output$per_week <- renderValueBox(valueBox(mean(per_week),
+    output$per_week <- renderValueBox(valueBox(round(mean(per_week), 2),
                                                'Average Sessions Per Week',
                                                icon = icon('check'),
                                                color = 'yellow'))
@@ -414,7 +414,6 @@ server <- function(input, output) {
         
     })
 
-    
 }
 
 
