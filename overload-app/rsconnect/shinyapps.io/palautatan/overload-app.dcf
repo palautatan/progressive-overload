@@ -1,0 +1,10 @@
+name: overload-app
+title:
+username:
+account: palautatan
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 2835692
+bundleId: 3642017
+url: https://palautatan.shinyapps.io/overload-app/
+when: 1600390189.92618

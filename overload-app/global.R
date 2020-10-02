@@ -17,7 +17,7 @@ welcome <- paste0('Welcome back, ', full_name, '!')
 
 
 # --------------- EXERCISE DATABASE ---------------------
-exercise_db <- readr::read_csv('../exercises/exercises-db.csv')
+exercise_db <- readr::read_csv('data/exercises-db.csv')
 all_exercises <- exercise_db$exercise
 
 all_equipment <- c('barbell', 'dumbbell, pair', 'dumbbell, single', 'EZ curl bar', 
